@@ -34,7 +34,7 @@
         .badge-negative { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .badge-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-        /* INCREASED HEADER PADDING HERE */
+        /* HEADER PADDING */
         .safe-top { 
             padding-top: max(3.5rem, env(safe-area-inset-top) + 2.5rem); 
         }
@@ -64,7 +64,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900 flex flex-col">
 
-    <!-- Header (Changed pt-10 to pt-14) -->
+    <!-- Header -->
     <header class="bg-indigo-700 px-6 pb-6 pt-14 safe-top text-white shadow-lg sticky top-0 z-50 rounded-b-[2rem]">
         <div class="flex justify-between items-center">
             <div>
@@ -95,6 +95,31 @@
             <div class="flex gap-3 pt-4">
                 <button onclick="closeConfirm()" class="flex-1 py-3.5 font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-colors active:scale-95">Cancel</button>
                 <button id="confirm-btn-yes" class="flex-1 py-3.5 font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200 rounded-2xl transition-colors active:scale-95">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal (NEW) -->
+    <div id="edit-student-modal" class="fixed inset-0 bg-slate-900/60 modal-overlay hidden items-center justify-center p-4 z-[110]">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in duration-200">
+            <div class="text-center">
+                <h3 class="text-xl font-black text-slate-800">Edit Student</h3>
+                <p class="text-xs text-slate-500 font-bold">Update details below</p>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Name</label>
+                    <input type="text" id="edit-student-name" class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-indigo-500 font-bold text-slate-800">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Grade</label>
+                    <input type="text" id="edit-student-grade" class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-indigo-500 font-bold text-slate-800">
+                </div>
+                <input type="hidden" id="edit-student-original-name">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeEditModal()" class="flex-1 py-3 font-bold text-slate-400 bg-slate-50 rounded-xl hover:bg-slate-100">Cancel</button>
+                <button onclick="saveEditStudent()" class="flex-1 py-3 font-bold text-white bg-indigo-600 rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700">Save Changes</button>
             </div>
         </div>
     </div>
@@ -343,6 +368,59 @@
             closeConfirm();
         };
 
+        // --- EDIT MODAL LOGIC ---
+        function openEditModal(name, grade) {
+            document.getElementById('edit-student-original-name').value = name;
+            document.getElementById('edit-student-name').value = name;
+            document.getElementById('edit-student-grade').value = grade || '';
+            document.getElementById('edit-student-modal').classList.remove('hidden');
+            document.getElementById('edit-student-modal').classList.add('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-student-modal').classList.add('hidden');
+            document.getElementById('edit-student-modal').classList.remove('flex');
+        }
+
+        function saveEditStudent() {
+            const originalName = document.getElementById('edit-student-original-name').value;
+            const newName = document.getElementById('edit-student-name').value.trim();
+            const newGrade = document.getElementById('edit-student-grade').value.trim();
+
+            if (!newName) return alert("Name cannot be empty");
+
+            // Check duplicate if name changed
+            if (newName !== originalName && students.some(s => s.name === newName)) {
+                return alert("Student name already exists!");
+            }
+
+            // Update List
+            const studentIndex = students.findIndex(s => s.name === originalName);
+            if (studentIndex !== -1) {
+                students[studentIndex].name = newName;
+                students[studentIndex].grade = newGrade;
+                students.sort((a, b) => a.name.localeCompare(b.name));
+                localStorage.setItem('geniushub_students', JSON.stringify(students));
+            }
+
+            // Update Logs if name changed
+            if (newName !== originalName) {
+                let sessionsChanged = false;
+                sessions.forEach(s => {
+                    if (s.name === originalName) {
+                        s.name = newName;
+                        sessionsChanged = true;
+                    }
+                });
+                if (sessionsChanged) {
+                    localStorage.setItem('geniushub_sessions', JSON.stringify(sessions));
+                }
+            }
+
+            renderStudents();
+            closeEditModal();
+        }
+
         // --- DATA MANAGEMENT ---
         function exportData() {
             const data = {
@@ -435,6 +513,9 @@
                     <div class="flex-grow">
                         <div class="flex items-center gap-2">
                             <h4 class="font-bold text-slate-800 text-lg">${s.name}</h4>
+                            <button onclick="openEditModal('${s.name}', '${s.grade}')" class="text-slate-300 hover:text-indigo-500 transition-colors p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                            </button>
                             <button onclick="deleteStudent('${s.name}')" class="text-slate-300 hover:text-red-500 transition-colors p-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
