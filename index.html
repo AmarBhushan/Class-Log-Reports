@@ -73,12 +73,27 @@
         </div>
     </header>
 
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 modal-overlay hidden items-center justify-center p-4 z-[110]">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in duration-200 text-center">
+            <div class="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-2 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 id="confirm-title" class="text-xl font-black text-slate-800">Are you sure?</h3>
+            <p id="confirm-msg" class="text-sm text-slate-500 font-medium leading-relaxed">This action cannot be undone.</p>
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeConfirm()" class="flex-1 py-3.5 font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-colors active:scale-95">Cancel</button>
+                <button id="confirm-btn-yes" class="flex-1 py-3.5 font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200 rounded-2xl transition-colors active:scale-95">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
-    <div id="settings-overlay" class="fixed inset-0 bg-slate-900/60 modal-overlay hidden items-center justify-center p-4">
+    <div id="settings-overlay" class="fixed inset-0 bg-slate-900/60 modal-overlay hidden items-center justify-center p-4 z-[100]">
         <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center border-b pb-2">
                 <h3 class="text-lg font-black text-slate-800">Data Management</h3>
-                <button onclick="closeSettings()" class="text-slate-400 font-bold">✕</button>
+                <button onclick="closeSettings()" class="text-slate-400 font-bold p-2 hover:bg-slate-50 rounded-full">✕</button>
             </div>
             
             <div class="space-y-3 pt-2">
@@ -92,7 +107,7 @@
                             <p class="text-[10px] text-indigo-600">Save file to move to new phone</p>
                         </div>
                     </div>
-                    <button onclick="exportData()" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">Download Backup</button>
+                    <button onclick="exportData()" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-200 active:scale-95 transition-transform">Download Backup</button>
                 </div>
 
                 <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-2">
@@ -105,7 +120,7 @@
                             <p class="text-[10px] text-amber-700">Load a backup file</p>
                         </div>
                     </div>
-                    <button onclick="triggerImport()" class="w-full py-2 bg-amber-500 text-white rounded-xl text-xs font-bold">Upload File</button>
+                    <button onclick="triggerImport()" class="w-full py-2 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-200 active:scale-95 transition-transform">Upload File</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(this)">
                 </div>
 
@@ -131,7 +146,7 @@
                     <input type="text" id="new-student-name" placeholder="Student Name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold">
                     <div class="flex gap-2">
                         <input type="text" id="new-student-grade" placeholder="Grade (e.g. 10th)" class="flex-grow p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold">
-                        <button onclick="addStudent()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold shadow-md shadow-indigo-200">Save</button>
+                        <button onclick="addStudent()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold shadow-md shadow-indigo-200 active:scale-95 transition-transform">Save</button>
                     </div>
                 </div>
             </div>
@@ -218,11 +233,11 @@
                 </div>
 
                 <div class="flex gap-2 pt-1">
-                    <button onclick="setRange('week')" class="flex-1 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200">Last 7 Days</button>
-                    <button onclick="setRange('month')" class="flex-1 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200">This Month</button>
+                    <button onclick="setRange('week')" class="flex-1 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200 active:scale-95 transition-transform">Last 7 Days</button>
+                    <button onclick="setRange('month')" class="flex-1 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200 active:scale-95 transition-transform">This Month</button>
                 </div>
 
-                <button onclick="generateReport()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700">Show Report</button>
+                <button onclick="generateReport()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-transform">Show Report</button>
             </div>
 
             <!-- Results -->
@@ -252,6 +267,8 @@
         let sessions = JSON.parse(localStorage.getItem('geniushub_sessions')) || [];
         let storedStudents = JSON.parse(localStorage.getItem('geniushub_students')) || [];
         let students = storedStudents.map(s => (typeof s === 'string') ? { name: s, grade: '' } : s);
+        
+        let confirmCallback = null;
 
         // --- INIT ---
         window.onload = () => {
@@ -295,6 +312,26 @@
             document.getElementById('settings-overlay').classList.remove('flex');
         }
 
+        // --- CUSTOM CONFIRM MODAL ---
+        function showConfirm(title, msg, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-modal').classList.add('flex');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').classList.remove('flex');
+            confirmCallback = null;
+        }
+
+        document.getElementById('confirm-btn-yes').onclick = () => {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        };
+
         // --- DATA MANAGEMENT ---
         function exportData() {
             const data = {
@@ -333,11 +370,15 @@
         }
 
         function clearData() {
-            if(confirm("⚠ WARNING: This will delete ALL students and sessions permanently.\n\nAre you sure you want to reset the app?")) {
-                localStorage.removeItem('geniushub_students');
-                localStorage.removeItem('geniushub_sessions');
-                location.reload();
-            }
+            showConfirm(
+                "Reset App Data?",
+                "This will permanently delete ALL students and logged sessions. This action cannot be undone.",
+                () => {
+                    localStorage.removeItem('geniushub_students');
+                    localStorage.removeItem('geniushub_sessions');
+                    location.reload();
+                }
+            );
         }
 
         // --- STUDENT MANAGEMENT ---
@@ -360,11 +401,15 @@
         }
 
         function deleteStudent(name) {
-            if(confirm(`Are you sure you want to delete ${name}? This will remove them from the list.`)) {
-                students = students.filter(s => s.name !== name);
-                localStorage.setItem('geniushub_students', JSON.stringify(students));
-                renderStudents();
-            }
+            showConfirm(
+                "Delete Student?",
+                `Are you sure you want to remove ${name}? This will remove them from your list.`,
+                () => {
+                    students = students.filter(s => s.name !== name);
+                    localStorage.setItem('geniushub_students', JSON.stringify(students));
+                    renderStudents();
+                }
+            );
         }
 
         function renderStudents() {
@@ -523,7 +568,8 @@
             if(data.length === 0) return alert("No data!");
             const studentName = document.getElementById('report-student').value;
             
-            let report = `*Progress Report: ${studentName}*\n📅 ${document.getElementById('report-start').value} to ${document.getElementById('report-end').value}\n\n`;
+            // Updated text copy header
+            let report = `*Daily Sessions Report: ${studentName}*\n📅 ${document.getElementById('report-start').value} to ${document.getElementById('report-end').value}\n\n`;
             data.forEach(s => {
                 let icon = s.hw === 'Done' ? '✅' : (s.hw === 'Partial' ? '⚠️' : '❌');
                 report += `📌 *${s.date}*\n📖 Topic: ${s.topic}\n📝 HW: ${s.hw} ${icon}\n⚡ Activity: ${s.active}\n------------------\n`;
@@ -582,7 +628,6 @@
                         text: `Here is the report for ${studentName}.`
                     });
                 } catch (error) {
-                    // User cancelled share or other error, fallback to download isn't usually necessary here but we can log it.
                     console.log('Share failed or cancelled', error);
                 }
             } else {
