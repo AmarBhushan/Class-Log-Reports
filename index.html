@@ -34,7 +34,11 @@
         .badge-negative { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .badge-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-        .safe-top { padding-top: max(1.5rem, env(safe-area-inset-top) + 1rem); }
+        /* INCREASED HEADER PADDING HERE */
+        .safe-top { 
+            padding-top: max(3.5rem, env(safe-area-inset-top) + 2.5rem); 
+        }
+        
         .safe-bottom { padding-bottom: max(1.5rem, env(safe-area-inset-bottom) + 1rem); }
         
         .custom-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -49,12 +53,19 @@
             transition: opacity 0.2s ease-in-out;
             z-index: 100;
         }
+
+        /* iOS Date Input Fix */
+        input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            min-height: 2.5rem;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900 flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-indigo-700 px-6 pb-6 pt-10 safe-top text-white shadow-lg sticky top-0 z-50 rounded-b-[2rem]">
+    <!-- Header (Changed pt-10 to pt-14) -->
+    <header class="bg-indigo-700 px-6 pb-6 pt-14 safe-top text-white shadow-lg sticky top-0 z-50 rounded-b-[2rem]">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">GeniusHub</h1>
@@ -222,13 +233,13 @@
                 </div>
                 
                 <div class="flex gap-2">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <label class="text-[9px] font-bold uppercase text-slate-400 ml-1">From</label>
-                        <input type="date" id="report-start" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                        <input type="date" id="report-start" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold appearance-none">
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <label class="text-[9px] font-bold uppercase text-slate-400 ml-1">To</label>
-                        <input type="date" id="report-end" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                        <input type="date" id="report-end" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold appearance-none">
                     </div>
                 </div>
 
