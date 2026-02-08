@@ -233,7 +233,7 @@
                         <button onclick="copyReport()" class="flex-1 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-3 rounded-xl border border-indigo-100 flex justify-center items-center gap-1 active:scale-95 transition-transform">
                             📋 Copy Text
                         </button>
-                        <button onclick="downloadPDF()" class="flex-1 text-xs font-bold text-white bg-red-500 px-3 py-3 rounded-xl shadow-md shadow-red-200 flex justify-center items-center gap-1 active:scale-95 transition-transform">
+                        <button onclick="shareOrDownloadPDF()" class="flex-1 text-xs font-bold text-white bg-red-500 px-3 py-3 rounded-xl shadow-md shadow-red-200 flex justify-center items-center gap-1 active:scale-95 transition-transform">
                             📄 Share / Download PDF
                         </button>
                     </div>
@@ -250,7 +250,6 @@
 
         // --- DATA & STATE ---
         let sessions = JSON.parse(localStorage.getItem('geniushub_sessions')) || [];
-        // Data Migration: Ensure students are objects {name, grade}
         let storedStudents = JSON.parse(localStorage.getItem('geniushub_students')) || [];
         let students = storedStudents.map(s => (typeof s === 'string') ? { name: s, grade: '' } : s);
 
@@ -259,7 +258,6 @@
             document.getElementById('log-date').valueAsDate = new Date();
             setRange('week');
             renderStudents();
-            // Save migrated structure back just in case
             localStorage.setItem('geniushub_students', JSON.stringify(students));
         };
 
@@ -351,13 +349,20 @@
 
             if(name && !students.some(s => s.name === name)) {
                 students.push({ name, grade });
-                // Sort by name
                 students.sort((a, b) => a.name.localeCompare(b.name));
                 localStorage.setItem('geniushub_students', JSON.stringify(students));
                 
                 nameInput.value = '';
                 gradeInput.value = '';
                 toggleAddStudent();
+                renderStudents();
+            }
+        }
+
+        function deleteStudent(name) {
+            if(confirm(`Are you sure you want to delete ${name}? This will remove them from the list.`)) {
+                students = students.filter(s => s.name !== name);
+                localStorage.setItem('geniushub_students', JSON.stringify(students));
                 renderStudents();
             }
         }
@@ -371,8 +376,13 @@
 
             list.innerHTML = students.map(s => `
                 <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-slate-800 text-lg">${s.name}</h4>
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-slate-800 text-lg">${s.name}</h4>
+                            <button onclick="deleteStudent('${s.name}')" class="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${s.grade || 'Student'}</p>
                     </div>
                     <div class="flex gap-2">
@@ -460,8 +470,10 @@
             const start = new Date();
             if (type === 'week') start.setDate(end.getDate() - 7);
             else if (type === 'month') start.setDate(1);
-            document.getElementById('report-end').valueAsDate = end;
-            document.getElementById('report-start').valueAsDate = start;
+            
+            // Format for HTML date input (YYYY-MM-DD)
+            document.getElementById('report-end').value = end.toISOString().split('T')[0];
+            document.getElementById('report-start').value = start.toISOString().split('T')[0];
         }
 
         function getFilteredData() {
@@ -521,7 +533,7 @@
             navigator.clipboard.writeText(report).then(() => alert("Copied for WhatsApp!"));
         }
 
-        function downloadPDF() {
+        async function shareOrDownloadPDF() {
             const data = getFilteredData();
             if(data.length === 0) return alert("No data to generate PDF!");
             const studentName = document.getElementById('report-student').value;
@@ -529,25 +541,19 @@
             const endDate = document.getElementById('report-end').value;
             
             const doc = new jsPDF();
-
             doc.setFontSize(20);
             doc.setTextColor(67, 56, 202);
-            // Updated Header Title
             doc.text("GeniusHub Daily Sessions Report", 14, 22);
             
             doc.setFontSize(10);
             doc.setTextColor(100);
-            
-            // Find student grade to add to header
             const student = students.find(s => s.name === studentName);
             const gradeText = student && student.grade ? `(${student.grade})` : "";
-            
             doc.text(`Student: ${studentName} ${gradeText}`, 14, 30);
             doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 35);
             doc.line(14, 38, 196, 38);
 
             const tableData = data.map(s => [s.date, s.topic, s.hw, s.active]);
-            
             doc.autoTable({
                 startY: 45,
                 head: [['Date', 'Topic', 'Homework', 'Interaction']],
@@ -562,8 +568,27 @@
             doc.setTextColor(150);
             doc.text("Generated by GeniusHub - Amar Bhushan", 14, finalY + 10);
 
-            // Updated Filename Format
-            doc.save(`${studentName} Everyday Class Report ${startDate} to ${endDate}.pdf`);
+            const fileName = `${studentName} Everyday Class Report ${startDate} to ${endDate}.pdf`;
+
+            // Try Web Share API first
+            const pdfBlob = doc.output('blob');
+            const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'GeniusHub Report',
+                        text: `Here is the report for ${studentName}.`
+                    });
+                } catch (error) {
+                    // User cancelled share or other error, fallback to download isn't usually necessary here but we can log it.
+                    console.log('Share failed or cancelled', error);
+                }
+            } else {
+                // Fallback to direct download
+                doc.save(fileName);
+            }
         }
     </script>
 </body>
