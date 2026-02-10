@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GeniusHub Reporter</title>
+    <title>Daily Logs</title>
     
     <!-- PWA Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,7 +68,7 @@
     <header class="bg-indigo-700 px-6 pb-6 pt-14 safe-top text-white shadow-lg sticky top-0 z-50 rounded-b-[2rem]">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight">GeniusHub</h1>
+                <h1 class="text-2xl font-bold tracking-tight">Daily Logs</h1>
                 <p class="text-[10px] text-indigo-200 uppercase font-bold tracking-widest">Reporter</p>
             </div>
             <div class="flex gap-2">
@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    <!-- Edit Student Modal (NEW) -->
+    <!-- Edit Student Modal -->
     <div id="edit-student-modal" class="fixed inset-0 bg-slate-900/60 modal-overlay hidden items-center justify-center p-4 z-[110]">
         <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in duration-200">
             <div class="text-center">
@@ -202,7 +202,7 @@
             
             <div class="bg-white p-6 rounded-[2rem] card-shadow border border-slate-100 space-y-5">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h3 class="text-lg font-black text-slate-800">Log Session</h3>
+                    <h3 class="text-lg font-black text-slate-800" id="log-header-title">Log Session</h3>
                     <span id="display-log-name" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">Student</span>
                     <input type="hidden" id="log-name">
                 </div>
@@ -213,30 +213,32 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Topic Taught</label>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Topic Taught <span class="text-red-500">*</span></label>
                     <input type="text" id="log-topic" placeholder="e.g. Algebra II" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-medium text-slate-800">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Homework Status</label>
-                    <div class="grid grid-cols-3 gap-2">
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Homework Status (Optional)</label>
+                    <div class="grid grid-cols-2 gap-2">
                         <button type="button" onclick="setHomework('Done')" class="hw-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-green-50 hover:text-green-700 transition-all" data-val="Done">Done ✅</button>
                         <button type="button" onclick="setHomework('Partial')" class="hw-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-amber-50 hover:text-amber-700 transition-all" data-val="Partial">Partial ⚠️</button>
                         <button type="button" onclick="setHomework('Not Done')" class="hw-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-red-50 hover:text-red-700 transition-all" data-val="Not Done">None ❌</button>
+                        <button type="button" onclick="setHomework('Not Given')" class="hw-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all" data-val="Not Given">Not Given ⚪</button>
                     </div>
                     <input type="hidden" id="log-hw">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Class Interaction</label>
-                    <div class="grid grid-cols-2 gap-2">
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Class Interaction (Optional)</label>
+                    <div class="grid grid-cols-3 gap-2">
                         <button type="button" onclick="setActive('Fully Active')" class="act-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 transition-all" data-val="Fully Active">Fully Active 🌟</button>
+                        <button type="button" onclick="setActive('Normal')" class="act-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-all" data-val="Normal">Normal 🙂</button>
                         <button type="button" onclick="setActive('Distracted')" class="act-btn p-3 rounded-xl border-2 border-slate-100 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all" data-val="Distracted">Distracted 💤</button>
                     </div>
                     <input type="hidden" id="log-active">
                 </div>
 
-                <button onclick="saveSession()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl hover:bg-indigo-700 active:scale-95 transition-all mt-4">Save Log</button>
+                <button onclick="saveSession()" id="btn-save-session" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl hover:bg-indigo-700 active:scale-95 transition-all mt-4">Save Log</button>
             </div>
             <div class="text-center">
                 <p id="save-msg" class="text-green-600 font-bold text-sm hidden">Saved Successfully! ✨</p>
@@ -305,6 +307,7 @@
         let students = storedStudents.map(s => (typeof s === 'string') ? { name: s, grade: '' } : s);
         
         let confirmCallback = null;
+        let editingSessionId = null;
 
         // --- INIT ---
         window.onload = () => {
@@ -328,6 +331,11 @@
                     el.classList.remove('animate-slide-up');
                 }
             });
+
+            // Reset Log form if switching away
+            if(tab === 'students') {
+                resetLogForm();
+            }
         }
 
         function toggleAddStudent() {
@@ -431,7 +439,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `GeniusHub_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `DailyLogs_Backup_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -534,6 +542,7 @@
             if(action === 'log') {
                 document.getElementById('log-name').value = name;
                 document.getElementById('display-log-name').innerText = name;
+                resetLogForm();
                 switchTab('log');
             } else {
                 document.getElementById('report-student').value = name;
@@ -552,8 +561,10 @@
                     if(status === 'Done') btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
                     if(status === 'Partial') btn.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
                     if(status === 'Not Done') btn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+                    if(status === 'Not Given') btn.classList.add('bg-slate-200', 'text-slate-800', 'border-slate-300');
                 } else {
-                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-indigo-500', 'bg-green-50', 'bg-amber-50', 'bg-red-50', 'text-green-700', 'text-amber-700', 'text-red-700', 'border-green-200', 'border-amber-200', 'border-red-200');
+                    // Reset classes
+                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-indigo-500', 'bg-green-50', 'bg-amber-50', 'bg-red-50', 'bg-slate-200', 'text-green-700', 'text-amber-700', 'text-red-700', 'text-slate-800', 'border-green-200', 'border-amber-200', 'border-red-200', 'border-slate-300');
                 }
             });
         }
@@ -564,10 +575,26 @@
                 if (btn.dataset.val === status) {
                     btn.classList.add('ring-2', 'ring-offset-1', 'ring-indigo-500');
                     if(status === 'Fully Active') btn.classList.add('bg-indigo-50', 'text-indigo-700', 'border-indigo-200');
+                    else if(status === 'Normal') btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
                     else btn.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-300');
                 } else {
-                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'bg-slate-100', 'text-slate-700', 'border-slate-300');
+                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'bg-blue-50', 'text-blue-700', 'border-blue-200', 'bg-slate-100', 'text-slate-700', 'border-slate-300');
                 }
+            });
+        }
+
+        function resetLogForm() {
+            editingSessionId = null;
+            document.getElementById('log-header-title').innerText = "Log Session";
+            document.getElementById('btn-save-session').innerText = "Save Log";
+            document.getElementById('log-date').valueAsDate = new Date();
+            document.getElementById('log-topic').value = '';
+            document.getElementById('log-hw').value = '';
+            document.getElementById('log-active').value = '';
+            
+            // Clear styles
+            document.querySelectorAll('.hw-btn, .act-btn').forEach(btn => {
+               btn.classList.remove('ring-2', 'ring-offset-1', 'ring-indigo-500', 'bg-green-50', 'bg-amber-50', 'bg-red-50', 'bg-slate-200', 'text-green-700', 'text-amber-700', 'text-red-700', 'text-slate-800', 'border-green-200', 'border-amber-200', 'border-red-200', 'border-slate-300', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'bg-blue-50', 'text-blue-700', 'border-blue-200');
             });
         }
 
@@ -578,27 +605,37 @@
             const hw = document.getElementById('log-hw').value;
             const active = document.getElementById('log-active').value;
 
-            if (!name || !date || !topic || !hw || !active) {
-                alert("Please fill all fields!");
+            // Updated validation: optional HW and Active
+            if (!name || !date || !topic) {
+                alert("Please fill 'Topic Taught' at minimum.");
                 return;
             }
 
-            const session = { id: Date.now(), name, date, topic, hw, active };
-            sessions.push(session);
+            if(editingSessionId) {
+                // Update existing
+                const index = sessions.findIndex(s => s.id === editingSessionId);
+                if(index !== -1) {
+                    sessions[index] = { ...sessions[index], name, date, topic, hw, active };
+                }
+            } else {
+                // Create new
+                const session = { id: Date.now(), name, date, topic, hw, active };
+                sessions.push(session);
+            }
+            
             sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
             localStorage.setItem('geniushub_sessions', JSON.stringify(sessions));
 
-            document.getElementById('log-topic').value = '';
-            document.getElementById('log-hw').value = '';
-            document.getElementById('log-active').value = '';
-            document.querySelectorAll('.hw-btn, .act-btn').forEach(btn => btn.className = btn.className.replace(/ring-2|bg-green-50|bg-amber-50|bg-red-50|bg-indigo-50/g, '').trim());
+            resetLogForm();
 
             const msg = document.getElementById('save-msg');
+            msg.innerText = editingSessionId ? "Updated Successfully! ✨" : "Saved Successfully! ✨";
             msg.classList.remove('hidden');
             setTimeout(() => {
                 msg.classList.add('hidden');
-                switchTab('students');
-            }, 1500);
+                switchTab('report'); // Go back to report to see changes
+                generateReport(); // Refresh report
+            }, 1000);
         }
 
         // --- REPORTING ---
@@ -638,21 +675,79 @@
             }
 
             data.forEach(s => {
-                let hwClass = 'badge-neutral';
-                if(s.hw === 'Done') hwClass = 'badge-positive';
-                if(s.hw === 'Not Done') hwClass = 'badge-negative';
-                if(s.hw === 'Partial') hwClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+                let hwDisplay = '';
+                if(s.hw) {
+                    let hwClass = 'badge-neutral';
+                    if(s.hw === 'Done') hwClass = 'badge-positive';
+                    if(s.hw === 'Not Done') hwClass = 'badge-negative';
+                    if(s.hw === 'Partial') hwClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+                    hwDisplay = `<span class="text-[10px] font-bold uppercase px-2 py-1 rounded-md ${hwClass}">HW: ${s.hw}</span>`;
+                }
+
+                let activeDisplay = '';
+                if(s.active) {
+                    let activeClass = 'text-slate-500';
+                    if(s.active === 'Fully Active') activeClass = 'text-indigo-600';
+                    if(s.active === 'Normal') activeClass = 'text-blue-600';
+                    activeDisplay = `<div class="flex items-center gap-2 text-xs"><span class="text-slate-400 font-bold">Interaction:</span><span class="font-bold ${activeClass}">${s.active}</span></div>`;
+                }
 
                 container.innerHTML += `
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
                         <div class="flex justify-between items-start">
                             <div><span class="text-xs text-slate-400 font-mono font-bold">${s.date}</span></div>
-                            <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-md ${hwClass}">HW: ${s.hw}</span>
+                            <div class="flex gap-2 items-center">
+                                ${hwDisplay}
+                                <div class="flex bg-slate-50 rounded-lg p-1">
+                                    <button onclick="editLog(${s.id})" class="p-1 text-slate-400 hover:text-indigo-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button onclick="deleteLog(${s.id})" class="p-1 text-slate-400 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="bg-slate-50 p-3 rounded-xl"><p class="text-xs text-slate-500 font-bold uppercase mb-1">Topic</p><p class="text-sm font-medium text-slate-800">${s.topic}</p></div>
-                        <div class="flex items-center gap-2 text-xs"><span class="text-slate-400 font-bold">Interaction:</span><span class="font-bold ${s.active === 'Fully Active' ? 'text-indigo-600' : 'text-slate-500'}">${s.active}</span></div>
+                        ${activeDisplay}
                     </div>`;
             });
+        }
+
+        function deleteLog(id) {
+            showConfirm(
+                "Delete Session?",
+                "Are you sure you want to delete this log entry?",
+                () => {
+                    sessions = sessions.filter(s => s.id !== id);
+                    localStorage.setItem('geniushub_sessions', JSON.stringify(sessions));
+                    generateReport();
+                }
+            );
+        }
+
+        function editLog(id) {
+            const session = sessions.find(s => s.id === id);
+            if(!session) return;
+
+            // Set State
+            editingSessionId = id;
+            document.getElementById('log-name').value = session.name;
+            document.getElementById('display-log-name').innerText = session.name;
+            
+            // Populate Fields
+            document.getElementById('log-date').value = session.date;
+            document.getElementById('log-topic').value = session.topic;
+            
+            // Set visuals for optional fields
+            if(session.hw) setHomework(session.hw);
+            if(session.active) setActive(session.active);
+
+            // Change UI text
+            document.getElementById('log-header-title').innerText = "Edit Session";
+            document.getElementById('btn-save-session').innerText = "Update Log";
+
+            switchTab('log');
         }
 
         function copyReport() {
@@ -663,8 +758,16 @@
             // Updated text copy header
             let report = `*Daily Sessions Report: ${studentName}*\n📅 ${document.getElementById('report-start').value} to ${document.getElementById('report-end').value}\n\n`;
             data.forEach(s => {
-                let icon = s.hw === 'Done' ? '✅' : (s.hw === 'Partial' ? '⚠️' : '❌');
-                report += `📌 *${s.date}*\n📖 Topic: ${s.topic}\n📝 HW: ${s.hw} ${icon}\n⚡ Activity: ${s.active}\n------------------\n`;
+                let icon = '';
+                if(s.hw === 'Done') icon = '✅';
+                else if(s.hw === 'Partial') icon = '⚠️';
+                else if(s.hw === 'Not Done') icon = '❌';
+                else if(s.hw === 'Not Given') icon = '⚪';
+
+                let hwLine = s.hw ? `📝 HW: ${s.hw} ${icon}\n` : '';
+                let activeLine = s.active ? `⚡ Activity: ${s.active}\n` : '';
+
+                report += `📌 *${s.date}*\n📖 Topic: ${s.topic}\n${hwLine}${activeLine}------------------\n`;
             });
             report += `\nThanks,\nAmar Bhushan`;
             
@@ -681,7 +784,7 @@
             const doc = new jsPDF();
             doc.setFontSize(20);
             doc.setTextColor(67, 56, 202);
-            doc.text("GeniusHub Daily Sessions Report", 14, 22);
+            doc.text("Daily Logs Report", 14, 22);
             
             doc.setFontSize(10);
             doc.setTextColor(100);
@@ -691,7 +794,7 @@
             doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 35);
             doc.line(14, 38, 196, 38);
 
-            const tableData = data.map(s => [s.date, s.topic, s.hw, s.active]);
+            const tableData = data.map(s => [s.date, s.topic, s.hw || '-', s.active || '-']);
             doc.autoTable({
                 startY: 45,
                 head: [['Date', 'Topic', 'Homework', 'Interaction']],
@@ -704,7 +807,7 @@
             const finalY = doc.lastAutoTable.finalY || 50;
             doc.setFontSize(10);
             doc.setTextColor(150);
-            doc.text("Generated by GeniusHub - Amar Bhushan", 14, finalY + 10);
+            doc.text("Generated by Daily Logs - Amar Bhushan", 14, finalY + 10);
 
             const fileName = `${studentName} Everyday Class Report ${startDate} to ${endDate}.pdf`;
 
@@ -716,7 +819,7 @@
                 try {
                     await navigator.share({
                         files: [file],
-                        title: 'GeniusHub Report',
+                        title: 'Daily Logs Report',
                         text: `Here is the report for ${studentName}.`
                     });
                 } catch (error) {
